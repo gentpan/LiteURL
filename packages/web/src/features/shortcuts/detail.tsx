@@ -2,6 +2,7 @@ import { useParams } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../../shared/api.client'
 import { useAliasDetail } from './aliases.hook'
+import { formatLocal } from '../../shared/datetime'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 export function AliasDetail() {
@@ -24,12 +25,12 @@ export function AliasDetail() {
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-[#0a0a0a] border border-[#27272a] rounded-lg p-4">
           <div className="text-sm text-[#a1a1aa] mb-1">Created</div>
-          <div className="text-lg font-semibold text-[#fafafa]">{new Date(rec.created * 1000).toLocaleDateString()}</div>
+          <div className="text-lg font-semibold text-[#fafafa]">{formatLocal(rec.created)}</div>
         </div>
         {rec.expires && (
           <div className="bg-[#0a0a0a] border border-[#27272a] rounded-lg p-4">
             <div className="text-sm text-[#a1a1aa] mb-1">Expires</div>
-            <div className="text-lg font-semibold text-[#fafafa]">{new Date(rec.expires * 1000).toLocaleDateString()}</div>
+            <div className="text-lg font-semibold text-[#fafafa]">{formatLocal(rec.expires)}</div>
           </div>
         )}
       </div>
