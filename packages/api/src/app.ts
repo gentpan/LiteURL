@@ -55,7 +55,27 @@ app.post('/api/backup', backupNow)
 app.get('/api/location', geoLocation)
 app.post('/api/upload/image', uploadMedia)
 
-// Forwarder (catch-all)
+// SPA fallback - serve index.html for non-API, non-redirect routes
+const SPA_DIR = path.resolve(import.meta.dirname ?? __dirname, '../../web/dist')
+const SPA_INDEX = path.join(SPA_DIR, 'index.html')
+const fs = await import('node:fs')
+
+app.get('/*', async (c) => {
+  // Try short link first
+  const result = await resolve(c)
+  if (result) return result
+
+  // Serve SPA index.html for HTML requests
+  const accept = c.req.header('accept') || ''
+  if (accept.includes('text/html')) {
+    const html = fs.readFileSync(SPA_INDEX, 'utf-8')
+    return c.html(html)
+  }
+
+  return c.notFound()
+})
+
+// Non-GET catch-all (POST, PUT, etc. for redirects)
 app.all('/*', async (c) => {
   const result = await resolve(c)
   if (result) return result
