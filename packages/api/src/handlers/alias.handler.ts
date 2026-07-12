@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import { AliasRecord, ALIAS_CHARS, makeAlias } from 'models'
-import { upsertRecord, fetchRecord, removeRecord, scanAll, searchAll, normalizeAlias } from '../db/repositories/alias.repo'
+import { upsertRecord, fetchRecord, removeRecord, removeMany, scanAll, searchAll, normalizeAlias } from '../db/repositories/alias.repo'
 import { sealCredential, sanitizeSecret, sanitizeSecrets, forExport } from '../services/vault'
 import { isSafeDestination } from '../services/url.guard'
 import { getEnv } from '../core/config'
@@ -77,8 +77,19 @@ export async function queryAlias(c: Context) {
 export async function listAliases(c: Context) {
   const size = z.coerce.number().max(1024).default(20).safeParse(c.req.query('size'))
   const cursor = c.req.query('cursor')
-  const { records, complete, cursor: next } = scanAll({ size: size.success ? size.data : 20, cursor })
+  const q = c.req.query('q')?.trim() || undefined
+  const sort = c.req.query('sort')?.trim() || undefined
+  const tag = c.req.query('tag')?.trim() || undefined
+  const { records, complete, cursor: next } = scanAll({ size: size.success ? size.data : 20, cursor, q, sort, tag })
   return c.json({ records: sanitizeSecrets(records), complete, cursor: next })
+}
+
+export async function batchRemoveAliases(c: Context) {
+  const body = z.object({ aliases: z.array(z.string().trim().regex(ALIAS_CHARS).max(2048)).min(1).max(200) }).safeParse(await c.req.json())
+  if (!body.success) return c.json({ error: body.error.flatten() }, 400)
+  const slugs = body.data.aliases.map(normalizeAlias)
+  const removed = removeMany(slugs)
+  return c.json({ removed })
 }
 
 export async function searchAliases(c: Context) {
@@ -200,5 +211,5 @@ export async function serveAsset(c: Context) {
   if (!buf) return c.json({ error: 'Not found' }, 404)
   const ext = key.split('.').pop()?.toLowerCase() || ''
   const mime: Record<string, string> = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml' }
-  return new Response(buf, { headers: { 'Content-Type': mime[ext] || 'application/octet-stream', 'Cache-Control': 'public, max-age=31536000, immutable' } })
+  return new Response(new Uint8Array(buf), { headers: { 'Content-Type': mime[ext] || 'application/octet-stream', 'Cache-Control': 'public, max-age=31536000, immutable' } })
 }

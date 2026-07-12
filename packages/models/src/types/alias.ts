@@ -10,8 +10,12 @@ export interface AliasSuggestion {
   remark?: string
 }
 
+export interface AliasListItem extends AliasRecord {
+  visits: number
+}
+
 export interface PagedAliases {
-  records: AliasRecord[]
+  records: AliasListItem[]
   cursor: string
   complete: boolean
 }

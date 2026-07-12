@@ -5,6 +5,7 @@ import { LoginPage } from './features/session/login'
 import { AliasList } from './features/shortcuts/list'
 import { AliasDetail } from './features/shortcuts/detail'
 import { AnalyticsPage } from './features/analytics/dashboard'
+import { OverviewPage } from './features/analytics/overview'
 import { HealthChecker } from './features/health/checker'
 import { MigratePage } from './features/backup/migrate'
 
@@ -19,6 +20,7 @@ const root = new RootRoute({
 const home = new Route({ getParentRoute: () => root, path: '/', component: HomePage })
 
 const dash = new Route({ getParentRoute: () => root, path: '/dashboard', component: DashboardShell })
+const dashIndex = new Route({ getParentRoute: () => dash, path: '/', component: OverviewPage })
 const dashLogin = new Route({ getParentRoute: () => dash, path: '/login', component: LoginPage })
 const dashLinks = new Route({ getParentRoute: () => dash, path: '/links', component: AliasList })
 const dashLink = new Route({ getParentRoute: () => dash, path: '/link/$alias', component: AliasDetail })
@@ -28,5 +30,5 @@ const dashMigrate = new Route({ getParentRoute: () => dash, path: '/migrate', co
 
 export const routeTree = root.addChildren([
   home,
-  dash.addChildren([dashLogin, dashLinks, dashLink, dashStats, dashCheck, dashMigrate]),
+  dash.addChildren([dashIndex, dashLogin, dashLinks, dashLink, dashStats, dashCheck, dashMigrate]),
 ])

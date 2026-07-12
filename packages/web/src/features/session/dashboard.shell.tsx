@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { Outlet, useRouter, useLocation, Link } from '@tanstack/react-router'
 import { useAuth } from './auth.store'
-import { Link2, BarChart3, ShieldCheck, Database, LogOut } from 'lucide-react'
+import { Link2, BarChart3, ShieldCheck, Database, LogOut, LayoutDashboard } from 'lucide-react'
 
 const NAV = [
+  { to: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { to: '/dashboard/links', label: 'Links', icon: Link2 },
   { to: '/dashboard/analysis', label: 'Analysis', icon: BarChart3 },
   { to: '/dashboard/check', label: 'Check', icon: ShieldCheck },

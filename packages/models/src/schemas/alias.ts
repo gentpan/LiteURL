@@ -46,6 +46,7 @@ export const AliasRecord = z.object({
   secret: SecretField.optional(),
   flagged: z.boolean().optional(),
   geoRules: GeoMap.optional(),
+  tags: z.array(z.string().trim().max(40).regex(/^[^,]+$/)).max(30).optional(),
 })
 
 export type AliasRecord = z.infer<typeof AliasRecord>

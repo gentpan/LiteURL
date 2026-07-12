@@ -77,3 +77,21 @@ export function exportStatsCsv(filter: { sql: string, params: unknown[] }, time:
     `SELECT slug, url, COUNT(DISTINCT ip) as viewer, COUNT(*) as views, COUNT(DISTINCT referer) as referer FROM access_logs WHERE ${where} GROUP BY slug, url ORDER BY views DESC`
   ).all(...params)
 }
+
+export interface OverviewStat {
+  totalLinks: number
+  totalClicks: number
+  topLinks: Array<{ slug: string, url: string, visits: number }>
+}
+
+export function queryOverview(): OverviewStat {
+  const db = connect()
+  const totalLinks = (db.prepare('SELECT COUNT(*) as c FROM links').get() as { c: number }).c
+  const totalClicks = (db.prepare('SELECT COUNT(*) as c FROM access_logs').get() as { c: number }).c
+  const topLinks = db.prepare(`
+    SELECT l.slug AS slug, l.url AS url, COUNT(a.id) AS visits
+    FROM links l LEFT JOIN access_logs a ON a.slug = l.slug
+    GROUP BY l.slug ORDER BY visits DESC LIMIT 6
+  `).all() as Array<{ slug: string, url: string, visits: number }>
+  return { totalLinks, totalClicks, topLinks }
+}

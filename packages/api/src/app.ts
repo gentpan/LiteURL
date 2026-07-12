@@ -9,12 +9,12 @@ import { rateLimit } from './core/rate.limit'
 import { resolve } from './core/forwarder'
 import { verifySession } from './handlers/session.handler'
 import {
-  createAlias, upsertAlias, editAlias, removeAlias,
+  createAlias, upsertAlias, editAlias, removeAlias, batchRemoveAliases,
   queryAlias, listAliases, searchAliases, exportAliases, importAliases,
   checkLinks, backupNow, geoLocation, uploadMedia, serveAsset,
 } from './handlers/alias.handler'
 import { createPublicAlias } from './handlers/public.handler'
-import { getCounters, getMetrics, getViews, getHeatmap, getEvents, getGeo, exportCsv } from './handlers/stats.handler'
+import { getCounters, getMetrics, getViews, getHeatmap, getEvents, getGeo, getOverview, exportCsv } from './handlers/stats.handler'
 
 const app = new Hono()
 const env = getEnv()
@@ -38,6 +38,7 @@ app.post('/api/link/create', createAlias)
 app.post('/api/link/upsert', upsertAlias)
 app.put('/api/link/edit', editAlias)
 app.post('/api/link/delete', removeAlias)
+app.post('/api/link/batch-delete', batchRemoveAliases)
 app.get('/api/link/query', queryAlias)
 app.get('/api/link/list', listAliases)
 app.get('/api/link/search', searchAliases)
@@ -47,6 +48,7 @@ app.post('/api/link/check', checkLinks)
 
 // Analytics
 app.get('/api/stats/counters', getCounters)
+app.get('/api/stats/overview', getOverview)
 app.get('/api/stats/metrics', getMetrics)
 app.get('/api/stats/views', getViews)
 app.get('/api/stats/heatmap', getHeatmap)

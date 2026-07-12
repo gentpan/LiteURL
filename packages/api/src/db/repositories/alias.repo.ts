@@ -21,6 +21,7 @@ function rowToRecord(row: Record<string, unknown>): AliasRecord {
     secret: row.password === null ? undefined : row.password as string,
     flagged: row.unsafe ? true : undefined,
     geoRules: row.geo ? JSON.parse(row.geo as string) : undefined,
+    tags: row.tags ? JSON.parse(row.tags as string) : undefined,
   }
 }
 
@@ -43,6 +44,7 @@ function recordToRow(r: AliasRecord) {
     password: r.secret ?? null,
     unsafe: r.flagged ? 1 : 0,
     geo: r.geoRules ? JSON.stringify(r.geoRules) : null,
+    tags: r.tags && r.tags.length ? JSON.stringify(r.tags) : null,
   }
 }
 
@@ -52,13 +54,13 @@ export function normalizeAlias(value: string): string {
 
 export function upsertRecord(r: AliasRecord): void {
   connect().prepare(`
-    INSERT INTO links (id, url, slug, comment, created_at, updated_at, expiration, title, description, image, apple, google, cloaking, redirect_with_query, password, unsafe, geo)
-    VALUES (@id, @url, @slug, @comment, @createdAt, @updatedAt, @expiration, @title, @description, @image, @apple, @google, @cloaking, @redirectWithQuery, @password, @unsafe, @geo)
+    INSERT INTO links (id, url, slug, comment, created_at, updated_at, expiration, title, description, image, apple, google, cloaking, redirect_with_query, password, unsafe, geo, tags)
+    VALUES (@id, @url, @slug, @comment, @createdAt, @updatedAt, @expiration, @title, @description, @image, @apple, @google, @cloaking, @redirectWithQuery, @password, @unsafe, @geo, @tags)
     ON CONFLICT(slug) DO UPDATE SET
       url = @url, comment = @comment, updated_at = @updatedAt, expiration = @expiration,
       title = @title, description = @description, image = @image, apple = @apple, google = @google,
       cloaking = @cloaking, redirect_with_query = @redirectWithQuery, password = @password,
-      unsafe = @unsafe, geo = @geo
+      unsafe = @unsafe, geo = @geo, tags = @tags
   `).run(recordToRow(r))
 }
 
@@ -74,17 +76,53 @@ export function removeRecord(slug: string): void {
   connect().prepare('DELETE FROM links WHERE slug = ?').run(slug)
 }
 
-export function scanAll(opts: { size: number, cursor?: string }) {
+export function removeMany(slugs: string[]): number {
+  if (!slugs.length) return 0
+  const db = connect()
+  const stmt = db.prepare('DELETE FROM links WHERE slug = ?')
+  const tx = db.transaction((items: string[]) => {
+    for (const s of items) stmt.run(s)
+  })
+  tx(slugs)
+  return slugs.length
+}
+
+export type ScanOpts = { size: number, cursor?: string, q?: string, sort?: string, tag?: string }
+
+export function scanAll(opts: ScanOpts) {
   const db = connect()
   const size = Math.min(opts.size, 1000)
   const offset = opts.cursor ? Number(opts.cursor) : 0
 
-  const rows = db.prepare('SELECT * FROM links ORDER BY created_at DESC LIMIT ? OFFSET ?').all(size + 1, offset) as Record<string, unknown>[]
+  const where: string[] = []
+  const params: unknown[] = []
+  if (opts.q) {
+    where.push('(slug LIKE ? OR url LIKE ? OR comment LIKE ?)')
+    const like = `%${opts.q}%`
+    params.push(like, like, like)
+  }
+  if (opts.tag) {
+    where.push('tags LIKE ?')
+    params.push(`%"${opts.tag}"%`)
+  }
+  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : ''
+
+  let orderSql = 'created_at DESC'
+  if (opts.sort === 'oldest') orderSql = 'created_at ASC'
+  else if (opts.sort === 'az') orderSql = 'slug ASC'
+  else if (opts.sort === 'za') orderSql = 'slug DESC'
+
+  const rows = db.prepare(`
+    SELECT l.*, (SELECT COUNT(*) FROM access_logs WHERE slug = l.slug) AS visits
+    FROM links l ${whereSql}
+    ORDER BY ${orderSql}
+    LIMIT ? OFFSET ?
+  `).all(...params, size + 1, offset) as Record<string, unknown>[]
   const hasMore = rows.length > size
   if (hasMore) rows.pop()
 
   return {
-    records: rows.map(rowToRecord),
+    records: rows.map(r => ({ ...rowToRecord(r), visits: (r.visits as number) || 0 })),
     complete: !hasMore,
     cursor: String(offset + (hasMore ? size : rows.length)),
   }

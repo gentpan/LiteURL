@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 import { StatsFilter, toCsv, stampFilename } from 'models'
 import { buildFilter, buildTimeFilter, BLOBS_MAP } from '../lib/filter.builder'
-import { queryCounters, queryMetric, queryTimeSeries, queryHeatmap, queryEvents, queryGeoPoints, exportStatsCsv } from '../db/repositories/click.repo'
+import { queryCounters, queryMetric, queryTimeSeries, queryHeatmap, queryEvents, queryGeoPoints, exportStatsCsv, queryOverview } from '../db/repositories/click.repo'
 
 const COL_MAP: Record<string, string> = {
   alias: 'slug', url: 'url', referrer: 'referer', country: 'country', region: 'region',
@@ -58,6 +58,10 @@ export async function getGeo(c: Context) {
   const f = buildFilter(parsed.data)
   const t = buildTimeFilter(parsed.data)
   return c.json(queryGeoPoints(f, t))
+}
+
+export async function getOverview(c: Context) {
+  return c.json(queryOverview())
 }
 
 export async function exportCsv(c: Context) {

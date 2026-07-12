@@ -39,6 +39,24 @@ export function connect(): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_links_slug ON links(slug);
     CREATE INDEX IF NOT EXISTS idx_links_created_at ON links(created_at);
 
+    CREATE TABLE IF NOT EXISTS links_meta (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
+  `)
+
+  // Migrations for existing databases
+  try {
+    const cols = _conn.pragma('table_info(links)') as Array<{ name: string }>
+    if (!cols.some(c => c.name === 'tags')) {
+      _conn.exec('ALTER TABLE links ADD COLUMN tags TEXT')
+    }
+  } catch {
+    // ignore migration errors
+  }
+
+  _conn.exec(`
+
     CREATE TABLE IF NOT EXISTS access_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       link_id TEXT,
