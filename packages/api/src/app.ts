@@ -61,29 +61,19 @@ const SPA_INDEX = path.join(SPA_DIR, 'index.html')
 const fs = await import('node:fs')
 
 app.get('/*', async (c) => {
-  const accept = c.req.header('accept') || ''
+  const raw = c.req.path.replace(/^\/|\/$/g, '')
+  const isDashboard = raw.startsWith('dashboard') || raw === ''
 
-  // If HTML request, try SPA first for known SPA paths
-  if (accept.includes('text/html')) {
-    const raw = c.req.path.replace(/^\/|\/$/g, '')
-    const isDashboard = raw.startsWith('dashboard') || raw === ''
-    if (isDashboard) {
-      const html = fs.readFileSync(SPA_INDEX, 'utf-8')
-      return c.html(html)
-    }
-  }
-
-  // Try short link
-  const result = await resolve(c)
-  if (result) return result
-
-  // SPA fallback for HTML
-  if (accept.includes('text/html')) {
+  if (isDashboard) {
     const html = fs.readFileSync(SPA_INDEX, 'utf-8')
     return c.html(html)
   }
 
-  return c.notFound()
+  const result = await resolve(c)
+  if (result) return result
+
+  const html = fs.readFileSync(SPA_INDEX, 'utf-8')
+  return c.html(html)
 })
 
 // Non-GET catch-all (POST, PUT, etc. for redirects)
