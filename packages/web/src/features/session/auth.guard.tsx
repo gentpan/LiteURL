@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useRouter, useLocation } from '@tanstack/react-router'
-import { useAuth } from '../features/session/auth.store'
+import { useAuth } from './auth.store'
 
 export function Guard({ children }: { children: React.ReactNode }) {
   const { logged, loading, check } = useAuth()

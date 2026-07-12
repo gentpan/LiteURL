@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api, setSession, clearSession, getSession } from '../shared/api.client'
+import { api, setSession, clearSession, getSession } from '../../shared/api.client'
 
 interface AuthState {
   logged: boolean

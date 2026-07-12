@@ -1,12 +1,12 @@
 import { RootRoute, Route } from '@tanstack/react-router'
-import { HomePage } from '../shared/home.page'
-import { DashboardShell } from '../features/session/dashboard.shell'
-import { LoginPage } from '../features/session/login'
-import { AliasList } from '../features/shortcuts/list'
-import { AliasDetail } from '../features/shortcuts/detail'
-import { AnalyticsPage } from '../features/analytics/dashboard'
-import { HealthChecker } from '../features/health/checker'
-import { MigratePage } from '../features/backup/migrate'
+import { HomePage } from './shared/home.page'
+import { DashboardShell } from './features/session/dashboard.shell'
+import { LoginPage } from './features/session/login'
+import { AliasList } from './features/shortcuts/list'
+import { AliasDetail } from './features/shortcuts/detail'
+import { AnalyticsPage } from './features/analytics/dashboard'
+import { HealthChecker } from './features/health/checker'
+import { MigratePage } from './features/backup/migrate'
 
 const root = new RootRoute({ component: HomePage })
 

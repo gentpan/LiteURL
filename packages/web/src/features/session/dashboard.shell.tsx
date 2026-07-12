@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Outlet, useRouter, useLocation } from '@tanstack/react-router'
-import { useAuth } from '../../features/session/auth.store'
+import { useAuth } from './auth.store'
 
 export function DashboardShell() {
   const { logged, loading, check } = useAuth()
@@ -27,7 +27,7 @@ export function DashboardShell() {
 }
 
 import { Link } from '@tanstack/react-router'
-import { useAuth } from '../../features/session/auth.store'
+import { useAuth } from './auth.store'
 import { Link2, BarChart3, ShieldCheck, Database, LogOut } from 'lucide-react'
 
 const NAV = [
