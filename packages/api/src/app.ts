@@ -61,12 +61,23 @@ const SPA_INDEX = path.join(SPA_DIR, 'index.html')
 const fs = await import('node:fs')
 
 app.get('/*', async (c) => {
-  // Try short link first
+  const accept = c.req.header('accept') || ''
+
+  // If HTML request, try SPA first for known SPA paths
+  if (accept.includes('text/html')) {
+    const raw = c.req.path.replace(/^\/|\/$/g, '')
+    const isDashboard = raw.startsWith('dashboard') || raw === ''
+    if (isDashboard) {
+      const html = fs.readFileSync(SPA_INDEX, 'utf-8')
+      return c.html(html)
+    }
+  }
+
+  // Try short link
   const result = await resolve(c)
   if (result) return result
 
-  // Serve SPA index.html for HTML requests
-  const accept = c.req.header('accept') || ''
+  // SPA fallback for HTML
   if (accept.includes('text/html')) {
     const html = fs.readFileSync(SPA_INDEX, 'utf-8')
     return c.html(html)
