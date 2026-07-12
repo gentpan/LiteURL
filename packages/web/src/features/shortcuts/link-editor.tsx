@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
 import type { AliasRecord } from 'models'
 import { useCreateAlias, useEditAlias } from './aliases.hook'
+import { Dialog, Field, Input, Button } from '../../components/ui'
 
 interface Props {
   open: boolean
@@ -41,8 +41,6 @@ export function LinkEditor({ open, initial, onClose, onSaved }: Props) {
     setExpires(toLocalInput(initial?.expires))
   }, [open, initial])
 
-  if (!open) return null
-
   const submit = async () => {
     setError('')
     if (!url.trim()) { setError('Target URL is required'); return }
@@ -68,55 +66,42 @@ export function LinkEditor({ open, initial, onClose, onSaved }: Props) {
   const busy = create.isPending || edit.isPending
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-lg bg-[#0a0a0a] border border-[#27272a] rounded-lg" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#27272a]">
-          <h2 className="text-lg font-semibold text-[#fafafa]">{isEdit ? 'Edit Link' : 'New Link'}</h2>
-          <button onClick={onClose} className="text-[#a1a1aa] hover:text-[#fafafa]"><X className="w-5 h-5" /></button>
-        </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <label className="block text-sm text-[#a1a1aa] mb-1.5">Target URL <span className="text-red-400">*</span></label>
-            <input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://example.com"
-              className="w-full px-3 py-2 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa] outline-none focus:border-[#52525b]" />
-          </div>
-          <div>
-            <label className="block text-sm text-[#a1a1aa] mb-1.5">Short alias</label>
-            <input value={alias} disabled={isEdit} onChange={e => setAlias(e.target.value)} placeholder={isEdit ? '' : 'leave empty for random'}
-              className="w-full px-3 py-2 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa] outline-none focus:border-[#52525b] disabled:opacity-50" />
-          </div>
-          <div>
-            <label className="block text-sm text-[#a1a1aa] mb-1.5">Remark</label>
-            <input value={remark} onChange={e => setRemark(e.target.value)} placeholder="optional note"
-              className="w-full px-3 py-2 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa] outline-none focus:border-[#52525b]" />
-          </div>
-          <div>
-            <label className="block text-sm text-[#a1a1aa] mb-1.5">Tags <span className="text-[#52525b]">(comma separated)</span></label>
-            <input value={tags} onChange={e => setTags(e.target.value)} placeholder="social, campaign"
-              className="w-full px-3 py-2 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa] outline-none focus:border-[#52525b]" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-[#a1a1aa] mb-1.5">Password</label>
-              <input value={password} onChange={e => setPassword(e.target.value)} type="text" placeholder={isEdit ? 'set new' : 'optional'}
-                className="w-full px-3 py-2 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa] outline-none focus:border-[#52525b]" />
-            </div>
-            <div>
-              <label className="block text-sm text-[#a1a1aa] mb-1.5">Expires</label>
-              <input value={expires} onChange={e => setExpires(e.target.value)} type="datetime-local"
-                className="w-full px-3 py-2 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa] outline-none focus:border-[#52525b]" />
-            </div>
-          </div>
-          {error && <p className="text-sm text-red-400">{error}</p>}
-        </div>
-        <div className="flex justify-end gap-3 px-5 py-4 border-t border-[#27272a]">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-[#a1a1aa] border border-[#27272a] rounded-md hover:text-[#fafafa]">Cancel</button>
-          <button onClick={submit} disabled={busy}
-            className="px-4 py-2 text-sm bg-[#fafafa] text-[#18181b] rounded-md font-medium hover:bg-[#e4e4e7] disabled:opacity-50">
+    <Dialog
+      open={open}
+      onOpenChange={o => !o && onClose()}
+      title={isEdit ? 'Edit Link' : 'New Link'}
+      footer={(
+        <>
+          <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
+          <Button size="sm" disabled={busy} onClick={submit}>
             {busy ? 'Saving...' : isEdit ? 'Save' : 'Create'}
-          </button>
+          </Button>
+        </>
+      )}
+    >
+      <div className="p-5 space-y-4">
+        <Field label={<>Target URL <span className="text-red-400">*</span></>}>
+          <Input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://example.com" />
+        </Field>
+        <Field label="Short alias">
+          <Input value={alias} disabled={isEdit} onChange={e => setAlias(e.target.value)} placeholder={isEdit ? '' : 'leave empty for random'} />
+        </Field>
+        <Field label="Remark">
+          <Input value={remark} onChange={e => setRemark(e.target.value)} placeholder="optional note" />
+        </Field>
+        <Field label="Tags" hint="comma separated">
+          <Input value={tags} onChange={e => setTags(e.target.value)} placeholder="social, campaign" />
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Password">
+            <Input value={password} onChange={e => setPassword(e.target.value)} type="text" placeholder={isEdit ? 'set new' : 'optional'} />
+          </Field>
+          <Field label="Expires">
+            <Input value={expires} onChange={e => setExpires(e.target.value)} type="datetime-local" />
+          </Field>
         </div>
+        {error && <p className="text-sm text-red-400">{error}</p>}
       </div>
-    </div>
+    </Dialog>
   )
 }

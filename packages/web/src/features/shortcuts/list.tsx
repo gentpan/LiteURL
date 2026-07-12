@@ -5,7 +5,15 @@ import { Trash2, BarChart3, Plus, Search, X } from 'lucide-react'
 import { useAliasList, useRemoveAlias, useBatchRemoveAliases } from './aliases.hook'
 import { LinkEditor } from './link-editor'
 import { formatLocal } from '../../shared/datetime'
+import { Button, Input, Select, AlertDialog } from '../../components/ui'
 import type { AliasListItem } from 'models'
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest' },
+  { value: 'oldest', label: 'Oldest' },
+  { value: 'az', label: 'Alias A-Z' },
+  { value: 'za', label: 'Alias Z-A' },
+]
 
 export function AliasList() {
   const [cursor, setCursor] = useState<string | undefined>()
@@ -49,26 +57,18 @@ export function AliasList() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-[#fafafa]">Aliases</h1>
-        <button onClick={() => { setEditing(null); setEditorOpen(true) }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#fafafa] text-[#18181b] rounded-md font-medium hover:bg-[#e4e4e7]">
+        <Button size="sm" onClick={() => { setEditing(null); setEditorOpen(true) }}>
           <Plus className="w-4 h-4" /> New Link
-        </button>
+        </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#52525b]" />
-          <input value={q} onChange={e => { setQ(e.target.value); setCursor(undefined) }}
-            placeholder="Search URL, alias, remark..."
-            className="w-full pl-9 pr-3 py-2 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa] outline-none focus:border-[#52525b]" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#52525b] z-10" />
+          <Input value={q} onChange={e => { setQ(e.target.value); setCursor(undefined) }}
+            placeholder="Search URL, alias, remark..." className="pl-9" />
         </div>
-        <select value={sort} onChange={e => { setSort(e.target.value); setCursor(undefined) }}
-          className="px-3 py-2 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa] outline-none focus:border-[#52525b]">
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-          <option value="az">Alias A-Z</option>
-          <option value="za">Alias Z-A</option>
-        </select>
+        <Select value={sort} onValueChange={v => { setSort(v); setCursor(undefined) }} options={SORT_OPTIONS} />
         {tag && (
           <button onClick={() => setTag(undefined)} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs bg-[#27272a] text-[#fafafa] rounded-md hover:bg-[#3f3f46]">
             #{tag} <X className="w-3 h-3" />
@@ -79,10 +79,9 @@ export function AliasList() {
       {selected.size > 0 && (
         <div className="flex items-center justify-between mb-3 px-3 py-2 bg-[#18181b] border border-[#27272a] rounded-md">
           <span className="text-sm text-[#a1a1aa]">{selected.size} selected</span>
-          <button onClick={confirmBatch} disabled={batchRemove.isPending}
-            className="px-3 py-1 text-sm bg-red-500 text-white rounded-md font-medium hover:bg-red-600 disabled:opacity-50">
+          <Button variant="danger" size="sm" onClick={confirmBatch} disabled={batchRemove.isPending}>
             {batchRemove.isPending ? 'Deleting...' : 'Delete selected'}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -118,18 +117,19 @@ export function AliasList() {
                     <td className="p-3 text-sm text-[#fafafa] text-right font-mono">{r.visits}</td>
                     <td className="p-3">
                       <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => navigate({ to: '/dashboard/link/$alias', params: { alias: r.alias } })} title="Analysis"
-                          className="w-8 h-8 inline-flex items-center justify-center rounded-md border border-[#27272a] text-[#a1a1aa] hover:text-[#fafafa] hover:bg-[#18181b] transition-colors">
+                        <Button variant="secondary" size="icon" title="Analysis"
+                          onClick={() => navigate({ to: '/dashboard/link/$alias', params: { alias: r.alias } })}>
                           <BarChart3 className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => { setEditing(r); setEditorOpen(true) }} title="Edit"
-                          className="w-8 h-8 inline-flex items-center justify-center rounded-md border border-[#27272a] text-[#a1a1aa] hover:text-[#fafafa] hover:bg-[#18181b] transition-colors text-xs">
+                        </Button>
+                        <Button variant="secondary" size="icon" className="text-xs" title="Edit"
+                          onClick={() => { setEditing(r); setEditorOpen(true) }}>
                           Edit
-                        </button>
-                        <button onClick={() => setPending(r)} title="Delete"
-                          className="w-8 h-8 inline-flex items-center justify-center rounded-md border border-[#27272a] text-[#a1a1aa] hover:text-red-400 hover:border-red-400/40 hover:bg-red-400/10 transition-colors">
+                        </Button>
+                        <Button variant="secondary" size="icon" title="Delete"
+                          className="hover:text-red-400 hover:border-red-400/40 hover:bg-red-400/10"
+                          onClick={() => setPending(r)}>
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -142,29 +142,23 @@ export function AliasList() {
           </div>
           {data && (
             <div className="flex justify-between mt-4">
-              <button onClick={() => { setCursor(undefined); setSelected(new Set()) }} disabled={!cursor} className="px-3 py-1.5 text-sm text-[#a1a1aa] border border-[#27272a] rounded-md disabled:opacity-50 hover:text-[#fafafa]">First</button>
-              {!data.complete && <button onClick={() => setCursor(data.cursor)} className="px-3 py-1.5 text-sm text-[#a1a1aa] border border-[#27272a] rounded-md hover:text-[#fafafa]">Next</button>}
+              <Button variant="secondary" size="sm" disabled={!cursor} onClick={() => { setCursor(undefined); setSelected(new Set()) }}>First</Button>
+              {!data.complete && <Button variant="secondary" size="sm" onClick={() => setCursor(data.cursor)}>Next</Button>}
             </div>
           )}
         </>
       )}
 
-      {pending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setPending(null)}>
-          <div className="w-full max-w-sm mx-4 bg-[#0a0a0a] border border-[#27272a] rounded-lg p-6" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-[#fafafa] mb-2">Delete link</h2>
-            <p className="text-sm text-[#a1a1aa] mb-1">Delete <span className="font-mono text-[#fafafa]">{pending.alias}</span>?</p>
-            <p className="text-sm text-[#a1a1aa] mb-6">This cannot be undone.</p>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setPending(null)} className="px-4 py-2 text-sm text-[#a1a1aa] border border-[#27272a] rounded-md hover:text-[#fafafa]">Cancel</button>
-              <button onClick={confirmRemove} disabled={remove.isPending}
-                className="px-4 py-2 text-sm bg-red-500 text-white rounded-md font-medium hover:bg-red-600 disabled:opacity-50">
-                {remove.isPending ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AlertDialog
+        open={!!pending}
+        onOpenChange={o => !o && setPending(null)}
+        title="Delete link"
+        description={pending ? `Delete "${pending.alias}"? This cannot be undone.` : undefined}
+        confirmLabel="Delete"
+        danger
+        loading={remove.isPending}
+        onConfirm={confirmRemove}
+      />
 
       <LinkEditor open={editorOpen} initial={editing} onClose={() => setEditorOpen(false)}
         onSaved={() => { setEditorOpen(false); setCursor(undefined) }} />

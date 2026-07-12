@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Download } from 'lucide-react'
 import { api, getSession } from '../../shared/api.client'
+import { Button, Input } from '../../components/ui'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 function countryFlag(cc: string): string {
@@ -96,14 +97,14 @@ export function AnalyticsPage() {
           <button onClick={() => setPreset('custom')} className={`px-3 py-1.5 text-sm rounded-md border border-[#27272a] ${preset === 'custom' ? 'text-[#fafafa] bg-[#18181b]' : 'text-[#a1a1aa] hover:text-[#fafafa]'}`}>Custom</button>
           {preset === 'custom' && (
             <div className="flex items-center gap-1">
-              <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="px-2 py-1.5 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa]" />
+              <Input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="h-8 w-auto px-2" />
               <span className="text-[#a1a1aa] text-sm">→</span>
-              <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="px-2 py-1.5 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa]" />
+              <Input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="h-8 w-auto px-2" />
             </div>
           )}
-          <button onClick={downloadCsv} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-[#27272a] rounded-md text-[#a1a1aa] hover:text-[#fafafa]">
+          <Button variant="secondary" size="sm" onClick={downloadCsv}>
             <Download className="w-4 h-4" /> CSV
-          </button>
+          </Button>
         </div>
       </div>
 

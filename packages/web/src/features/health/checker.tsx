@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { api } from '../../shared/api.client'
+import { Button, Textarea } from '../../components/ui'
 import type { CheckOutcome } from 'models'
 
 export function HealthChecker() {
@@ -15,10 +16,10 @@ export function HealthChecker() {
       <h1 className="text-2xl font-semibold text-[#fafafa] mb-6">Health Check</h1>
       <div className="bg-[#0a0a0a] border border-[#27272a] rounded-lg p-6 max-w-2xl">
         <p className="text-sm text-[#a1a1aa] mb-4">Enter aliases (one per line):</p>
-        <textarea value={input} onChange={e => setInput(e.target.value)} placeholder={"alias1\nalias2\nalias3"} className="w-full h-32 px-3 py-2 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa] placeholder-[#52525b] focus:outline-none focus:border-[#52525b] mb-4 font-mono" />
-        <button onClick={() => { const aliases = input.split('\n').map(s => s.trim()).filter(Boolean); check.mutate(aliases.map(a => ({ alias: a, url: '' }))) }} disabled={check.isPending || !input.trim()} className="px-4 py-2 bg-[#fafafa] text-[#18181b] rounded-md text-sm font-medium hover:bg-[#e4e4e7] disabled:opacity-50">
+        <Textarea value={input} onChange={e => setInput(e.target.value)} placeholder={"alias1\nalias2\nalias3"} className="h-32 mb-4" />
+        <Button onClick={() => { const aliases = input.split('\n').map(s => s.trim()).filter(Boolean); check.mutate(aliases.map(a => ({ alias: a, url: '' }))) }} disabled={check.isPending || !input.trim()}>
           {check.isPending ? 'Checking...' : 'Check'}
-        </button>
+        </Button>
         {outcomes && (
           <div className="mt-6 space-y-2">
             {outcomes.map((o, i) => (

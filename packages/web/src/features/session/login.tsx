@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import { useAuth } from './auth.store'
+import { Button, Field, Input } from '../../components/ui'
 
 export function LoginPage() {
   const [token, setToken] = useState('')
@@ -19,11 +20,12 @@ export function LoginPage() {
       <div className="w-full max-w-sm mx-auto">
         <div className="bg-[#0a0a0a] border border-[#27272a] rounded-lg p-8 mx-4">
           <h1 className="text-xl font-semibold text-center mb-6 text-[#fafafa]">LiteURL</h1>
-          <form onSubmit={submit}>
-            <label className="block text-sm font-medium text-[#fafafa] mb-2">Site Token</label>
-            <input type="password" value={token} onChange={e => setToken(e.target.value)} placeholder="Enter your site token" className="w-full px-3 py-2 bg-[#09090b] border border-[#27272a] rounded-md text-sm text-[#fafafa] placeholder-[#52525b] focus:outline-none focus:border-[#52525b] mb-4" required autoFocus />
-            {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
-            <button type="submit" disabled={loading} className="w-full py-2 bg-[#fafafa] text-[#18181b] rounded-md text-sm font-medium hover:bg-[#e4e4e7] disabled:opacity-50">{loading ? 'Verifying...' : 'Sign In'}</button>
+          <form onSubmit={submit} className="space-y-4">
+            <Field label="Site Token">
+              <Input type="password" value={token} onChange={e => setToken(e.target.value)} placeholder="Enter your site token" required autoFocus />
+            </Field>
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            <Button type="submit" disabled={loading} className="w-full">{loading ? 'Verifying...' : 'Sign In'}</Button>
           </form>
         </div>
       </div>
