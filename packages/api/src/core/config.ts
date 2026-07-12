@@ -17,6 +17,7 @@ export interface AppEnv {
   hookUrl: string
   hookSecret: string
   corsOn: boolean
+  geoOn: boolean
   safeCheckDoh: string
   suppressBotLogs: boolean
   autoBackupOff: boolean
@@ -53,6 +54,7 @@ Description: max 200 chars, concise summary.`,
     hookUrl: process.env.WEBHOOK_URL || '',
     hookSecret: process.env.WEBHOOK_SECRET || '',
     corsOn: process.env.API_CORS === 'true',
+    geoOn: process.env.SERVER_GEO_LOOKUP !== 'false',
     safeCheckDoh: process.env.SAFE_BROWSING_DOH || '',
     suppressBotLogs: process.env.DISABLE_BOT_ACCESS_LOG === 'true',
     autoBackupOff: process.env.DISABLE_AUTO_BACKUP === 'true',

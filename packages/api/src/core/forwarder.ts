@@ -4,6 +4,7 @@ import { getEnv } from '../core/config'
 import { fetchRecord, normalizeAlias } from '../db/repositories/alias.repo'
 import { logClick } from '../db/repositories/click.repo'
 import { verifyCredential } from '../services/vault'
+import { enrichGeo } from '../services/geo.service'
 import { detectLocale } from '../lib/i18n'
 import { buildPasswordPage, buildWarnPage, buildOgPage, buildCloakPage } from '../lib/html.builder'
 
@@ -79,6 +80,7 @@ export async function resolve(c: any): Promise<Response | void> {
   // Log click
   const logData = { ua, ip: c.req.header('x-forwarded-for')?.split(',')[0] || '', referer: c.req.header('referer') || '', language: (c.req.header('accept-language') || '').split(',')[0] || '' }
   try { logClick(rec.id, rec.alias, rec.url, logData) } catch { /* ok */ }
+  enrichGeo(logData.ip)
 
   // Device redirect
   if (devUrl) {

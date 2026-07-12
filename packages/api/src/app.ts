@@ -8,6 +8,7 @@ import { guard } from './core/auth.guard'
 import { rateLimit } from './core/rate.limit'
 import { resolve } from './core/forwarder'
 import { verifySession } from './handlers/session.handler'
+import { backfillGeo } from './services/geo.service'
 import {
   createAlias, upsertAlias, editAlias, removeAlias, batchRemoveAliases,
   queryAlias, listAliases, searchAliases, exportAliases, importAliases,
@@ -20,6 +21,8 @@ const app = new Hono()
 const env = getEnv()
 
 connect()
+
+backfillGeo()
 
 if (env.corsOn) app.use('*', cors())
 
