@@ -2,7 +2,21 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Download } from 'lucide-react'
 import { api, getSession } from '../../shared/api.client'
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+
+function countryFlag(cc: string): string {
+  if (!cc || cc.length !== 2 || !/^[a-zA-Z]{2}$/.test(cc)) return ''
+  return cc.toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0)))
+}
+
+const REGION_NAMES = typeof Intl !== 'undefined' && 'DisplayNames' in Intl
+  ? new Intl.DisplayNames(['en'], { type: 'region' })
+  : null
+
+function countryName(cc: string): string {
+  if (!cc) return 'Unknown'
+  try { return REGION_NAMES?.of(cc.toUpperCase()) || cc.toUpperCase() } catch { return cc.toUpperCase() }
+}
 
 const DAY = 86400
 const now = () => Math.floor(Date.now() / 1000)
@@ -119,8 +133,8 @@ export function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <MetricCard title="Countries" type="country" q={q} />
-        <MetricCard title="Referrers" type="referrer" q={q} />
+        <MetricCard title="Countries" type="country" q={q} kind="country" />
+        <MetricCard title="Referrers" type="referrer" q={q} kind="referrer" />
         <MetricCard title="Devices" type="device" q={q} />
         <MetricCard title="Operating Systems" type="os" q={q} />
         <MetricCard title="Browsers" type="agent" q={q} />
@@ -172,27 +186,49 @@ function Heatmap({ data }: { data: Array<{ weekday: number, hour: number, visits
   )
 }
 
-function MetricCard({ title, type, q }: { title: string, type: string, q: string }) {
+function labelFor(name: string, kind?: string): { icon: string, text: string } {
+  const v = (name ?? '').trim()
+  if (kind === 'country') return { icon: countryFlag(v), text: countryName(v) }
+  if (kind === 'referrer') return { icon: '', text: v || 'Direct' }
+  return { icon: '', text: v || 'Unknown' }
+}
+
+function MetricCard({ title, type, q, kind }: { title: string, type: string, q: string, kind?: string }) {
   const { data } = useQuery({
     queryKey: ['analytics', 'metric', type, q],
     queryFn: () => api(`/stats/metrics?type=${type}&limit=8&${q}`),
   })
   const rows = (data as any[]) || []
   const max = Math.max(1, ...rows.map(r => r.count))
-  const palette = ['#fafafa', '#e4e4e7', '#d4d4d8', '#a1a1aa', '#71717a', '#52525b']
+  const total = rows.reduce((s, r) => s + (r.count || 0), 0)
   return (
     <div className="bg-[#0a0a0a] border border-[#27272a] rounded-lg p-4">
       <h2 className="text-lg font-semibold text-[#fafafa] mb-4">{title}</h2>
-      <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={rows} layout="vertical">
-          <XAxis type="number" stroke="#a1a1aa" fontSize={11} />
-          <YAxis type="category" dataKey="name" stroke="#a1a1aa" fontSize={11} width={80} tickFormatter={v => String(v || '').slice(0, 12) || '—'} />
-          <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '6px' }} labelStyle={{ color: '#fafafa' }} />
-          <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-            {rows.map((_, i) => <Cell key={i} fill={palette[i % palette.length]} />)}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      {rows.length === 0 ? (
+        <div className="py-10 text-center text-sm text-[#52525b]">No data</div>
+      ) : (
+        <div className="space-y-1.5">
+          {rows.map((r, i) => {
+            const { icon, text } = labelFor(r.name, kind)
+            const pct = total ? Math.round((r.count / total) * 100) : 0
+            return (
+              <div key={i} className="relative flex items-center h-8 rounded-md overflow-hidden" title={`${text} — ${r.count}`}>
+                <div className="absolute inset-y-0 left-0 bg-[#27272a] rounded-md" style={{ width: `${(r.count / max) * 100}%` }} />
+                <div className="relative flex items-center justify-between w-full px-2.5 text-sm">
+                  <span className="flex items-center gap-2 truncate text-[#fafafa]">
+                    {icon && <span className="text-base leading-none">{icon}</span>}
+                    <span className="truncate">{text}</span>
+                  </span>
+                  <span className="flex items-center gap-2 shrink-0 pl-2">
+                    <span className="text-[#52525b] text-xs tabular-nums">{pct}%</span>
+                    <span className="text-[#a1a1aa] tabular-nums font-medium">{r.count}</span>
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
