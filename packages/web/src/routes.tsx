@@ -1,4 +1,4 @@
-import { RootRoute, Route } from '@tanstack/react-router'
+import { RootRoute, Route, Outlet } from '@tanstack/react-router'
 import { HomePage } from './shared/home.page'
 import { DashboardShell } from './features/session/dashboard.shell'
 import { LoginPage } from './features/session/login'
@@ -8,9 +8,15 @@ import { AnalyticsPage } from './features/analytics/dashboard'
 import { HealthChecker } from './features/health/checker'
 import { MigratePage } from './features/backup/migrate'
 
-const root = new RootRoute({ component: HomePage })
+const root = new RootRoute({
+  component: () => (
+    <>
+      <Outlet />
+    </>
+  ),
+})
 
-const home = new Route({ getParentRoute: () => root, path: '/' })
+const home = new Route({ getParentRoute: () => root, path: '/', component: HomePage })
 
 const dash = new Route({ getParentRoute: () => root, path: '/dashboard', component: DashboardShell })
 const dashLogin = new Route({ getParentRoute: () => dash, path: '/login', component: LoginPage })
