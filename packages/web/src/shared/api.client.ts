@@ -19,3 +19,16 @@ export async function api<T = any>(path: string, opts: Omit<RequestInit, 'body'>
   const txt = await res.text()
   return txt ? JSON.parse(txt) : (null as T)
 }
+
+export async function createPublicLink(url: string, alias?: string): Promise<{ alias: string, shortUrl: string, url: string }> {
+  const res = await fetch('/api/public/link', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(alias ? { url, alias } : { url }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }))
+    throw new Error(err.error || res.statusText)
+  }
+  return res.json()
+}

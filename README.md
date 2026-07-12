@@ -98,6 +98,54 @@ All `/api/*` routes require `Authorization: Bearer <token>`.
 | `POST` | `/api/backup` | Download DB backup |
 | `POST` | `/api/upload/image` | Upload image |
 
+### Public API (no token required)
+
+Anyone can create short links without authentication. Rate limited to 20 req/min per IP.
+
+| Method | Endpoint | Body | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/public/link` | `{ "url": "https://...", "alias"? : "custom" }` | Create short link publicly |
+
+```bash
+curl -X POST https://uz.bi/api/public/link \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com/some/long/path"}'
+
+# => {"alias":"aB3xK9","shortUrl":"https://uz.bi/aB3xK9","url":"https://example.com/some/long/path"}
+```
+
+## Embed in Other Sites
+
+The public API can be called from any website. Two options:
+
+### Option A — iframe
+
+```html
+<iframe
+  src="https://uz.bi/embed.html"
+  style="width:100%;max-width:420px;height:340px;border:0;"
+  title="申请短链"
+></iframe>
+```
+
+### Option B — fetch from your own page
+
+```html
+<script>
+async function makeShort(longUrl, customAlias) {
+  const res = await fetch('https://uz.bi/api/public/link', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(customAlias ? { url: longUrl, alias: customAlias } : { url: longUrl }),
+  })
+  const data = await res.json()
+  return data.shortUrl // e.g. https://uz.bi/aB3xK9
+}
+</script>
+```
+
+> Note: if you call the API from a different origin, set `API_CORS=true` in `packages/api/.env` to enable CORS.
+
 ## Project Structure
 
 ```
